@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visit-counter
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: visit-counter
+  template:
+    metadata:
+      labels:
+        app: visit-counter
+    spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.36
+        command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for MySQL..."
+            until nc -z -v -w5 mysql 3306
+            do
+              echo "MySQL is unavailable - sleeping"
+              sleep 3
+            done
+            echo "MySQL is up!"
+      containers:
+      - name: app
+        image: shehbab/visit-counter
+        ports:
+          - containerPort: 8080
+        env:
+          - name: DB_HOST
+            value: mysql                 # MySQL service name
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_PASSWORD
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_DATABASE
+

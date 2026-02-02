@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb
+data:
+  init-appdb.sql: |
+    CREATE DATABASE IF NOT EXISTS appdb;
+
+    CREATE USER IF NOT EXISTS 'appuser'@'%' IDENTIFIED BY 'apppass';
+    GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'%';
+
+    CREATE USER IF NOT EXISTS 'appuser'@'localhost' IDENTIFIED BY 'apppass';
+    GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'localhost';
+
+    FLUSH PRIVILEGES;
+
+    USE appdb;
+
+    CREATE TABLE IF NOT EXISTS counter (
+      id INT PRIMARY KEY,
+      visits INT
+    );
+
+    INSERT INTO counter (id, visits)
+    VALUES (1, 0)
+    ON DUPLICATE KEY UPDATE id=id;
+
